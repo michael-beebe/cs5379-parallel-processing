@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     // Output the row sums
     for (i = 0; i < 100; i++) {
       printf(" %d ", row_sum[i]);
-      if (i % 5 == 0)
+      if ((i + 1) % 5 == 0)
         printf("\n");
     }
   }
