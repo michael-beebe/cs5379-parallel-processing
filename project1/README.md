@@ -1,14 +1,17 @@
 # Project 1
 ## Team Members
 - Michael Beebe (R11772231)
-- TODO: everyone else add your names
+- Diego Salas Noain (R11794236
+- Bandar Alkhalil (R11836831))
+- Yongjian Zhao (R11915830)
+- Denish Otieno (R11743138)
+- Shiva Kumar Neekishetty (R11842757)
 
 ## Required Software
 - MPI implementation (we are using Open MPI)
 - C Compiler (such as gcc or clang)
 - Make
 - Bash
-
 
 ## Instructions
 ### Compile
