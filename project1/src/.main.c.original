@@ -4,10 +4,10 @@
 #include <time.h>
 
 #define generate_data(i, j) (i) + (j) * (j)
-#define CHUNK_SIZE 10  // Number of rows in each chunk
 
 int main(int argc, char **argv) {
-  int i, j, pid, np, mtag;
+  int i, j, pid, np, mtag, count;
+  double t0, t1;
   int data[100][100], row_sum[100];
 
   // Initialize MPI environment and get process ID and total number of processes
@@ -23,12 +23,9 @@ int main(int argc, char **argv) {
       for (j = 0; j < 100; j++)
         data[i][j] = generate_data(i, j);
 
-    // Asynchronously send the first half of the data array to process 1 in chunks
+    // TODO: Asynchronously send the first half of the data array to process 1
     mtag = 1;
-    for (i = 0; i < 50; i += CHUNK_SIZE) {
-      MPI_Isend(&data[i][0], CHUNK_SIZE * 100, MPI_INT, 1, mtag, MPI_COMM_WORLD, &req_s);
-      MPI_Wait(&req_s, &status);  // Wait for send to complete before sending next chunk
-    }
+    MPI_Isend(data, 5000, MPI_INT, 1, mtag, MPI_COMM_WORLD, &req_s);
 
     // Generate the second half of the data array
     for (i = 50; i < 100; i++)
@@ -41,6 +38,7 @@ int main(int argc, char **argv) {
       for (j = 0; j < 100; j++)
         row_sum[i] += data[i][j];
     }
+    MPI_Wait(&req_s, &status);
 
     // Receive computed row sums for the first half from process 1
     mtag = 2;
@@ -54,34 +52,15 @@ int main(int argc, char **argv) {
     }
   }
   else { // Worker process (pid 1)
-    int previous_chunk_start = -CHUNK_SIZE;  // To keep track of the previously received chunk
+    // TODO: Receive the first half of the data array from process 0
+    mtag = 1;
+    MPI_Recv(data, 5000, MPI_INT, 0, mtag, MPI_COMM_WORLD, &status);
 
-    for (i = 0; i < 50; i += CHUNK_SIZE) {
-        // Start receiving the next chunk
-        mtag = 1;
-        MPI_Irecv(&data[i][0], CHUNK_SIZE * 100, MPI_INT, 0, mtag, MPI_COMM_WORLD, &req_r);
-
-        // Compute row sums for the previously received chunk
-        if (previous_chunk_start >= 0) {
-          for (int k = previous_chunk_start; k < previous_chunk_start + CHUNK_SIZE; k++) {
-            row_sum[k] = 0;
-            for (j = 0; j < 100; j++) {
-              row_sum[k] += data[k][j];
-            }
-          }
-        }
-
-        // Wait for the current chunk to finish receiving
-        MPI_Wait(&req_r, &status);
-        previous_chunk_start = i;
-    }
-
-    // Compute row sums for the last received chunk
-    for (i = previous_chunk_start; i < previous_chunk_start + CHUNK_SIZE; i++) {
-        row_sum[i] = 0;
-        for (j = 0; j < 100; j++) {
-          row_sum[i] += data[i][j];
-        }
+    // Compute row sums for the first half of the data array
+    for (i = 0; i < 50; i++) {
+      row_sum[i] = 0;
+      for (j = 0; j < 100; j++)
+        row_sum[i] += data[i][j];
     }
 
     // Send computed row sums for the first half to process 0
@@ -91,5 +70,5 @@ int main(int argc, char **argv) {
 
   // Finalize MPI environment
   MPI_Finalize();
-  return 0;
-}
+  return 1;
+} /****************** End of function main() ********************/
