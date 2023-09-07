@@ -57,31 +57,31 @@ int main(int argc, char **argv) {
     int previous_chunk_start = -CHUNK_SIZE;  // To keep track of the previously received chunk
 
     for (i = 0; i < 50; i += CHUNK_SIZE) {
-        // Start receiving the next chunk
-        mtag = 1;
-        MPI_Irecv(&data[i][0], CHUNK_SIZE * 100, MPI_INT, 0, mtag, MPI_COMM_WORLD, &req_r);
+      // Start receiving the next chunk
+      mtag = 1;
+      MPI_Irecv(&data[i][0], CHUNK_SIZE * 100, MPI_INT, 0, mtag, MPI_COMM_WORLD, &req_r);
 
-        // Compute row sums for the previously received chunk
-        if (previous_chunk_start >= 0) {
-          for (int k = previous_chunk_start; k < previous_chunk_start + CHUNK_SIZE; k++) {
-            row_sum[k] = 0;
-            for (j = 0; j < 100; j++) {
-              row_sum[k] += data[k][j];
-            }
+      // Compute row sums for the previously received chunk
+      if (previous_chunk_start >= 0) {
+        for (int k = previous_chunk_start; k < previous_chunk_start + CHUNK_SIZE; k++) {
+          row_sum[k] = 0;
+          for (j = 0; j < 100; j++) {
+            row_sum[k] += data[k][j];
           }
         }
+      }
 
-        // Wait for the current chunk to finish receiving
-        MPI_Wait(&req_r, &status);
-        previous_chunk_start = i;
+      // Wait for the current chunk to finish receiving
+      MPI_Wait(&req_r, &status);
+      previous_chunk_start = i;
     }
 
     // Compute row sums for the last received chunk
     for (i = previous_chunk_start; i < previous_chunk_start + CHUNK_SIZE; i++) {
-        row_sum[i] = 0;
-        for (j = 0; j < 100; j++) {
-          row_sum[i] += data[i][j];
-        }
+      row_sum[i] = 0;
+      for (j = 0; j < 100; j++) {
+        row_sum[i] += data[i][j];
+      }
     }
 
     // Send computed row sums for the first half to process 0
