@@ -4,7 +4,7 @@
 #include <time.h>
 
 #define generate_data(i, j) (i) + (j) * (j)
-#define CHUNK_SIZE 10  // Number of rows in each chunk
+#define CHUNK_SIZE 5  // Number of rows in each chunk
 
 int main(int argc, char **argv) {
   int i, j, pid, np, mtag;

@@ -18,9 +18,8 @@ make
 ```
 
 ### Run
-Specify the number of desired MPI ranks in the sript argument. If no number is specified, 4 will be used by default.
 ```
-./run.sh <desired number of MPI ranks>
+./run.sh
 ```
 
 ### Clean Build
