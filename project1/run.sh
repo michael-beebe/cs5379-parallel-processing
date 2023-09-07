@@ -2,15 +2,7 @@
 
 
 # Default number of processes
-NUM_PROCESSES=4
-
-# Check the number of arguments and if an argument is provided
-if [ "$#" -gt 1 ]; then
-  echo "Usage: ./run.sh [number_of_processes]"
-  exit 1
-elif [ "$#" -eq 1 ]; then
-  NUM_PROCESSES=$1
-fi
+NUM_PROCESSES=2
 
 # Path to the executable
 EXECUTABLE="./bin/project1"
