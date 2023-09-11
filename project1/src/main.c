@@ -44,13 +44,8 @@ int main(int argc, char **argv) {
                 }
                 compute_flag = false;
             }
-
-            if (i > 0) {  // Wait for the previous send to complete after initiating the next one
-                MPI_Wait(&req_s, &status);
-            }
+            MPI_Wait(&req_s, &status);
         }
-        // Wait for the last send to complete
-        MPI_Wait(&req_s, &status);
 
         // Receive computed row sums for the first half from process 1
         mtag = 2;
