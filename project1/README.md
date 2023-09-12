@@ -42,6 +42,7 @@ make clean
 - The program uses asynchronous communication (MPI_Isend and MPI_Irecv) to overlap communication and computation. This aims to achieve better performance by not making the process wait idly while sending or receiving data.
 - The matrix data is divided between the two processes. The master process (pid 0) generates the entire matrix but only computes sums for the second half, while the worker process (pid 1) computes sums for the first half.
 - This program MUST use exactly two processes
+- We achieve receiver side overlapping by dividing the first half of the matrix into multiple chunks. (Size of chunck is configured in CHUNK_SIZE, the default setting is 5, which means we send 5 rows of data each time, and it will send 10 times since there are 50 rows in total, you can also alter this setting as long as the number is divisible by 50, e.g. 10, 25) Then for the worker process, it will compute the row sum of previous chunk while receiving the current chunk.
 
 ### Master Process (pid 0)
 - Generates the first half of the data matrix.
