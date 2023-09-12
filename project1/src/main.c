@@ -26,6 +26,7 @@ int main(int argc, char **argv) {
 
         // Asynchronously send the first half of the data array to process 1 in chunks
         mtag = 1;
+        // Overlapping computation from master (pid = 0)'s side when sending the first chuck of data
         bool compute_flag = true;
         for (i = 0; i < 50; i += CHUNK_SIZE) {
             MPI_Isend(&data[i][0], CHUNK_SIZE * 100, MPI_INT, 1, mtag, MPI_COMM_WORLD, &req_s);
@@ -42,6 +43,7 @@ int main(int argc, char **argv) {
                     for (j = 0; j < 100; j++)
                         row_sum[k] += data[k][j];
                 }
+                // Do not duplicately compute when sending subsequent chuncks
                 compute_flag = false;
             }
             MPI_Wait(&req_s, &status);
