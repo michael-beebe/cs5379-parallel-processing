@@ -38,3 +38,19 @@ make clean
 ```
 
 ## Code Breakdown
+### myBarrier():
+- Synchronizes all participating processors.
+- The synchronization is achieved in two main phases, each running for `log2(p_number)` iterations, where `p_number` is the total number of processors:
+- Reducing Phase:
+  - Starts with the highest power of 2 less than `p_number` and decrements in each iteration.
+  - In each iteration, processors send notification messages to other processors based on their rank and the current power of 2.
+- Scattering Phase:
+  - Starts from the lowest power of 2 and increments in each iteration.
+  - Similar to the reducing phase, processors send and receive notification messages based on their rank and the current power of 2.
+- The use of `log2(p_number)` iterations ensures efficient synchronization, as each processor communicates directly with another processor in each step, reducing the total number of steps needed for all processors to synchronize.
+
+### main():
+- Initializes the MPI environment.
+- Retrieves and prints information about the current processor.
+- Calls the `myBarrier()` function to synchronize all processors.
+- Finalizes the MPI environment.

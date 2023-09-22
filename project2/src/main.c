@@ -35,7 +35,7 @@ void myBarrier(int rank, int p_number) {
       if (rank == j) {
         dest = j + (int)pow(2, i);
         MPI_Send(&counter, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-          printf("Processor #%d sent notification message to processor #%d\n", rank, dest);
+        printf("Processor #%d sent notification message to processor #%d\n", rank, dest);
       }
       else if (rank == (j + (int)pow(2, i))) {
         MPI_Recv(&buf, 1, MPI_INT, j, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -52,8 +52,10 @@ int main(int argc,char** argv) {
   MPI_Comm_size(MPI_COMM_WORLD, &p_number);
   MPI_Get_processor_name(processor_name, &name_len);
   
-  printf("\nHello world from processor %s, rank %d out of %d processors\n",
-    processor_name, rank, p_number);
+  printf(
+    "\nHello world from processor %s, rank %d out of %d processors\n",
+    processor_name, rank, p_number
+  );
   
   myBarrier(rank, p_number);
   
