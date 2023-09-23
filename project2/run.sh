@@ -4,6 +4,10 @@
 # Default number of processes
 NUM_PROCESSES=2
 
+if [ $1 ]; then
+  NUM_PROCESSES=$1
+fi
+
 # Path to the executable
 EXECUTABLE="./bin/project2"
 
