@@ -12,20 +12,17 @@ void mybarrier(MPI_Comm comm)
     printf("Processor #%d has entered the barrier section\n\n", rank);
     int i, j, n, dest, buf, k, k1;
     int counter = 1;
-
     n = (int)log2(process_count);   //The Output will be 2*log2(process_count)
     //The reducing part, loop for n times
     for (i = n - 1; i >= 0; i--) {
         k = (int)pow(2, i);
         k1 = (int)pow(2, i + 1);
-        for (j = k; j < k1; j++)
-        {
+        for (j = k; j < k1; j++) {
             if (rank == j) {
                 dest = j - (int)pow(2, i);
-                //Message needs to be sent to process with dest notification message
+                //Message needs to be sent to process with dest
                 MPI_Send(&counter, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
                 printf("Processor #%d sent notification message to processor #%d in the reducing stage\n", rank, dest);
-
             }
             else if (rank == (j - (int)pow(2, i)))
             {
