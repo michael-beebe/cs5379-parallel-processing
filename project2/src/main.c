@@ -1,10 +1,9 @@
-
 #include <stdio.h>
 #include <math.h>
 #include "mpi.h"
 
 void myBarrier(int rank, int p_number) {
-  printf("Processor #%d has entered the barrier section\n", rank);
+  printf("******* Processor #%d has entered the barrier section ******* \n", rank);
   int i, j, n, dest, buf, k, k1;
   int counter = 1;
   n = (int)  log(p_number);   //The Output will be 2*log2(p_number)
@@ -19,7 +18,7 @@ void myBarrier(int rank, int p_number) {
         //Message needs to be sent to process with dest
         //Notification message
         MPI_Send(&counter, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-        printf("Processor #%d sent notification message to processor #%d\n", rank, dest);
+        printf("******* Processor #%d sent notification message to processor #%d *******\n", rank, dest);
       }
       else if (rank == (j - (int)pow(2, i))) {
         //packs up all of its necessary data into a buffer for process dest.
@@ -35,32 +34,33 @@ void myBarrier(int rank, int p_number) {
       if (rank == j) {
         dest = j + (int)pow(2, i);
         MPI_Send(&counter, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-        printf("Processor #%d sent notification message to processor #%d\n", rank, dest);
+        printf("******* Processor #%d sent notification message to processor #%d *******\n", rank, dest);
       }
       else if (rank == (j + (int)pow(2, i))) {
         MPI_Recv(&buf, 1, MPI_INT, j, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       }
     }
   }
+  MPI_Finalize(); //MPI_Finalize is used to clean up the MPI environment. No more MPI calls can be made after this one.
 }
 
 int main(int argc,char** argv) {
   int rank, p_number, name_len;
   char processor_name[MPI_MAX_PROCESSOR_NAME];
+
+  // MPI initialization
   MPI_Init(&argc, &argv);
+  // Get the rank of the process
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  // Get the number of processes
   MPI_Comm_size(MPI_COMM_WORLD, &p_number);
+  // Get Processor Machine Name
   MPI_Get_processor_name(processor_name, &name_len);
-  
-  printf(
-    "\nHello world from processor %s, rank %d out of %d processors\n",
-    processor_name, rank, p_number
-  );
-  
+  printf("/*************************************************************************************/\n");
+  printf("/******* Hello world from processor %s, rank %d out of %d processors \n",
+    processor_name, rank, p_number);
+  printf("/*************************************************************************************/\n");
   myBarrier(rank, p_number);
-  
-  printf("Processor #%d exited the barrier section\n\n", rank);
-  
-  MPI_Finalize();
+  printf("******* Processor #%d exited the barrier section ******* \n", rank);
   return 0;
 }
