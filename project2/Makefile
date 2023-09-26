@@ -39,3 +39,4 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.c | $(BUILDDIR)
 .PHONY: clean
 clean:
 	rm -rf $(BUILDDIR) $(BINDIR)
+	

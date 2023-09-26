@@ -3,6 +3,7 @@
 
 # Default number of processes
 NUM_PROCESSES=8
+
 if [ $1 ]; then
   NUM_PROCESSES=$1
 fi

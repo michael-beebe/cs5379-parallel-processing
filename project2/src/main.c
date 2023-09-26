@@ -5,15 +5,15 @@
 void mybarrier(MPI_Comm comm)
 {
     int rank, process_count;
-
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &process_count);
 
     printf("Processor #%d has entered the barrier section\n\n", rank);
     int i, j, n, dest, buf, k, k1;
     int counter = 1;
-    n = (int)log2(process_count);   //The Output will be 2*log2(process_count)
-    //The reducing part, loop for n times
+    n = (int)log2(process_count);   //Iteration steps
+
+    //The reducing phase, loop for n times
     for (i = n - 1; i >= 0; i--) {
         k = (int)pow(2, i);
         k1 = (int)pow(2, i + 1);
@@ -22,13 +22,13 @@ void mybarrier(MPI_Comm comm)
                 dest = j - (int)pow(2, i);
                 //Message needs to be sent to process with dest
                 MPI_Send(&counter, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-                printf("Processor #%d sent notification message to processor #%d in the reducing stage\n", rank, dest);
+                printf("Processor #%d sent notification message to processor #%d in the reducing phase\n", rank, dest);
             }
             else if (rank == (j - (int)pow(2, i)))
             {
                 //packs up all of its necessary data into a buffer for process dest.
                 MPI_Recv(&buf, 1, MPI_INT, j, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                printf("Processor #%d received notification message from processor #%d in the reducing stage\n", rank, j);
+                printf("Processor #%d received notification message from processor #%d in the reducing phase\n", rank, j);
             }
         }
     }
@@ -36,28 +36,27 @@ void mybarrier(MPI_Comm comm)
     /* The scattering part which takes log2(process_count) loops*/
     for (i = 0; i < n; i++) {
         k = ((int)pow(2, i)) - 1;
-        for (j = 0; j <= k; j++)
-        {
+        for (j = 0; j <= k; j++) {
             if (rank == j) {
                 dest = j + (int)pow(2, i);
                 MPI_Send(&counter, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-                printf("Processor #%d sent notification message to processor #%d in the scattering stage\n", rank, dest);
+                printf("Processor #%d sent notification message to processor #%d in the scattering phase\n", rank, dest);
             }
             else if (rank == (j + (int)pow(2, i)))
             {
                 MPI_Recv(&buf, 1, MPI_INT, j, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                printf("Processor #%d received notification message from processor #%d in the scattering stage\n", rank, j);
+                printf("Processor #%d received notification message from processor #%d in the scattering phase\n", rank, j);
             }
         }
     }
 }
 
 
-int main(int argc,char** argv)
-{
+int main(int argc,char** argv) {
     int rank, process_count, process_name_len;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
 
+    // MPI initialization
     MPI_Init(&argc, &argv);
     MPI_Comm comm = MPI_COMM_WORLD;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
