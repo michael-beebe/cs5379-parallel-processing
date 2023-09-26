@@ -2,7 +2,7 @@
 
 
 # Default number of processes
-NUM_PROCESSES=2
+NUM_PROCESSES=8
 
 if [ $1 ]; then
   NUM_PROCESSES=$1
@@ -16,4 +16,4 @@ MPI_LAUNCHER=mpirun
 
 # Check if the executable exists and run the program
 [ ! -f "$EXECUTABLE" ] && echo "$EXECUTABLE not found. Compile first." && exit 1 \
-|| $MPI_LAUNCHER -np $NUM_PROCESSES $EXECUTABLE
+|| $MPI_LAUNCHER -oversubscribe -np $NUM_PROCESSES $EXECUTABLE
