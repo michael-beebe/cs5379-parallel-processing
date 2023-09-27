@@ -2,7 +2,7 @@
 
 
 # Default number of processes
-NUM_PROCESSES=8
+NUM_PROCESSES=4
 
 if [ $1 ]; then
   NUM_PROCESSES=$1
