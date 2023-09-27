@@ -49,6 +49,7 @@ void mybarrier(MPI_Comm comm)
             }
         }
     }
+    MPI_Finalize();
 }
 
 
@@ -70,6 +71,6 @@ int main(int argc,char** argv) {
     mybarrier(comm);
     printf("Processor #%d exited the barrier section.\n\n", rank);
 
-    MPI_Finalize();
+    // MPI_Finalize();
     return 0;
 }

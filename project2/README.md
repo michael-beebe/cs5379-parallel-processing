@@ -24,8 +24,10 @@ make
 
 ### Run
 ```
-./run.sh
+./run.sh <desired number of processes>
 ```
+The default number of processes is 4. You can change this by passing a command line argument when executing `run.sh`.
+
 If you get an error saying "permission denied", run
 ```
 chmod +x run.sh
