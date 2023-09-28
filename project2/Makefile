@@ -13,7 +13,7 @@ OBJS = $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SRCS))
 DEPS = $(OBJS:.o=.d)
 
 # Output binary
-OUT = $(BINDIR)/project2
+OUT = $(BINDIR)/group_5_assignment_2
 
 # Main build target
 all: $(OUT)

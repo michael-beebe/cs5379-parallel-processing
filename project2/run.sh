@@ -9,7 +9,7 @@ if [ $1 ]; then
 fi
 
 # Path to the executable
-EXECUTABLE="./bin/project2"
+EXECUTABLE="./bin/group_5_assignment_2"
 
 # MPI launcher
 MPI_LAUNCHER=mpirun
