@@ -14,9 +14,11 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "mpi.h"
+#define min(i, j) (((i) < (j)) ? (i) : (j))
 
-void HW3(int SOURCE, int n, int **edge, int *distance) {
+void HW3(int SOURCE, int n, int **edge, int *distance, int rank, int process_count) {
   int i, j, count, tmp, least, leastPos, *found;
 
   found = (int *)calloc(n, sizeof(int));
@@ -26,6 +28,11 @@ void HW3(int SOURCE, int n, int **edge, int *distance) {
   }
   found[SOURCE] = 1;
   count = 1;
+
+  // int chunk, istart, iend;
+  // chunk = n/process_count;
+  // istart = rank * chunk;
+  // iend  = istart + chunk ;
 
   while (count < n) {
     least = 987654321;
@@ -51,29 +58,31 @@ void HW3(int SOURCE, int n, int **edge, int *distance) {
 
 int main(int argc, char **argv)
 {
-  int rank, process_count, *distance, **edge;
+  int rank, process_count, n, *distance, **edge;
 
   // MPI initialization
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &process_count);
 
-  distance = (int *)calloc(process_count, sizeof(int));
-  edge = (int **)malloc(process_count * sizeof(int *));
-  for (int i = 0; i < process_count; i++) {
-    edge[i] = (int *)calloc(process_count, sizeof(int));
+  n = 100;
+  distance = (int *)calloc(n, sizeof(int));
+  edge = (int **)malloc(n * sizeof(int *));
+  for (int i = 0; i < n; i++) {
+    edge[i] = (int *)calloc(n, sizeof(int));
   }
 
   //TODO: Generate edge[n][n] values
   //      Simply using random function does not work 
   //      since it may violate triangle inequality
-  for (int i = 0; i < process_count; i++) {
-    for (int j = i + 1; j < process_count; j++) {
-
+  //Simple choice : Suppose all nodes are distributed in a straight line
+  for (int i = 0; i < n; i++) {
+    for (int j = i + 1; j < n; j++) {
+      edge[i][j] = edge[j][i] = j - i;
     }
   }
 
-  HW3(0, process_count, edge, distance);
+  HW3(0, n, edge, distance, rank, process_count);
   MPI_Finalize();
   return 0;
 }
