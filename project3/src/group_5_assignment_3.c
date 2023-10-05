@@ -15,11 +15,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h> 
 #include "mpi.h"
 #define min(i, j) (((i) < (j)) ? (i) : (j))
 
 void HW3(int SOURCE, int n, int **edge, int *distance, int rank, int process_count) {
-  int i, j, count, tmp, least, leastPos, *found;
+  int i, j, count, tmp, *found;
+  int local_min_val, local_min_pos, *local_min_val_group, *local_min_pos_group, global_min_val, global_min_pos;
 
   found = (int *)calloc(n, sizeof(int));
   for (i = 0; i < n; i++) {
@@ -28,32 +30,63 @@ void HW3(int SOURCE, int n, int **edge, int *distance, int rank, int process_cou
   }
   found[SOURCE] = 1;
   count = 1;
-
-  // int chunk, istart, iend;
-  // chunk = n/process_count;
-  // istart = rank * chunk;
-  // iend  = istart + chunk ;
+  
+  local_min_val_group = (int *)calloc(n, sizeof(int));
+  local_min_pos_group = (int *)calloc(n, sizeof(int));
+  //Determine the range each process calculate in
+  int chunk, istart, iend;
+  chunk = n/process_count;
+  istart = rank * chunk;
+  iend  = istart + chunk ;
 
   while (count < n) {
-    least = 987654321;
-    for (i = 0; i < n; i++) { //parallelize this loop
+    //Reset the local/global min val to INT_MAX at each iteration
+    local_min_val = INT_MAX, global_min_val = INT_MAX;
+    for (i = istart; i < iend; i++) { //parallelize this loop (Achieved by range istart and iend)
       tmp = distance[i];
-      if ((!found[i]) && (tmp < least)) {
-        least = tmp;
-        leastPos = i;
+      if ((!found[i]) && (tmp < local_min_val)) {
+        local_min_val = tmp;
+        local_min_pos = i;
       }
     }
+    //MPI_Allgather will gather the local info into local groups and broadcast to every process
+    MPI_Allgather(&local_min_val, 1, MPI_INT, local_min_val_group, 1, MPI_INT, MPI_COMM_WORLD);
+    MPI_Allgather(&local_min_pos, 1, MPI_INT, local_min_pos_group, 1, MPI_INT, MPI_COMM_WORLD);
+    //Get the global min val and position
+    for (i = 0; i < process_count; i++) {
+      if (local_min_val_group[i] < global_min_val) {
+        global_min_val = local_min_val_group[i];
+        global_min_pos = local_min_pos_group[i];
+      }
+    }
+    //Debug info, may be deleted in the final submission
+    if (rank == 0 && count % 10 == 0) {
+      for (i = 0; i < process_count; i++) {
+        printf("%d ", local_min_val_group[i]);
+      }
+      printf("This is the %dth iteration, global min is %d at node %d\n", count, global_min_val, global_min_pos);
+    }
 
-    found[leastPos] = 1;
+    found[global_min_pos] = 1;
     count++;
-    for (i = 0; i < n; i++) { //parallelize this loop
+    for (i = istart; i < iend; i++) { //parallelize this loop (Achieved by range istart and iend)
       if (!found[i]) {
-        distance[i] = min(distance[i], least + edge[leastPos][i]);
+        distance[i] = min(distance[i], global_min_val + edge[global_min_pos][i]);
       }
     }
+    //We do not need to gather the info for distance array since each process handles an independent part, will gather the results after the while loop
+    //MPI_Barrier(MPI_COMM_WORLD); //Not sure MPI_Barrier is needed, but in my test case, it is not needed
   } /*** End of while ***/
-
+  //Gather the final distance result on root process
+  MPI_Gather(distance + istart, chunk, MPI_INT, distance, chunk, MPI_INT, 0, MPI_COMM_WORLD);
+  if (rank == 0) {
+    for (i = 0; i < n; i++) {
+      printf("%d ", distance[i]);
+    }
+  }
   free(found);
+  free(local_min_val_group);
+  free(local_min_pos_group);
 }
 
 int main(int argc, char **argv)
@@ -82,7 +115,9 @@ int main(int argc, char **argv)
     }
   }
 
-  HW3(0, n, edge, distance, rank, process_count);
+  HW3(10, n, edge, distance, rank, process_count);
+  free(distance);
+  free(edge);
   MPI_Finalize();
   return 0;
 }
