@@ -24,7 +24,10 @@ void HW3(int SOURCE, int n, int **edge, int *distance, int rank, int process_cou
   int local_min_val, local_min_pos, *local_min_val_group, *local_min_pos_group, global_min_val, global_min_pos;
 
   found = (int *)calloc(n, sizeof(int));
-
+  for (i = 0; i < n; i++) {
+    found[i] = 0;
+    distance[i] = edge[SOURCE][i];
+  }
   found[SOURCE] = 1;
   count = 1;
   
@@ -35,14 +38,7 @@ void HW3(int SOURCE, int n, int **edge, int *distance, int rank, int process_cou
   chunk = n/process_count;
   istart = rank * chunk;
   iend  = istart + chunk ;
-  for (i = 0; i < n; i++) {
-    found[i] = 0;
-    if (i >= istart && i < iend) {
-      distance[i] = edge[SOURCE][i];
-    } else {
-      distance[i] = INT_MAX;
-    }
-  }
+
   while (count < n) {
     //Reset the local/global min val to INT_MAX at each iteration
     local_min_val = INT_MAX, global_min_val = INT_MAX;
@@ -81,13 +77,7 @@ void HW3(int SOURCE, int n, int **edge, int *distance, int rank, int process_cou
     //We do not need to gather the info for distance array since each process handles an independent part, will gather the results after the while loop
     //MPI_Barrier(MPI_COMM_WORLD); //Not sure MPI_Barrier is needed, but in my test case, it is not needed
   } /*** End of while ***/
-  //Gather the final distance result on root process
-  
-  for (i = 0; i < n; i++) {
-    if (i == 0 ) printf("process %d distance info before gathering:\n", rank);
-    printf("%d ", distance[i]);
-  }
-  printf("\n");
+
   // The send and receive buffer to be the same works on my end, or if you have objections we may follow the answer 
   // listed in https://stackoverflow.com/a/34453564/22692032
   
@@ -95,10 +85,13 @@ void HW3(int SOURCE, int n, int **edge, int *distance, int rank, int process_cou
   MPI_Gather(distance + istart, chunk, MPI_INT, distance, chunk, MPI_INT, 0, MPI_COMM_WORLD);
 
   if (rank == 0) {
+    printf("Final distance array value: ");
     for (i = 0; i < n; i++) {
       printf("%d ", distance[i]);
     }
+    printf("\n");
   }
+  
   free(found);
   free(local_min_val_group);
   free(local_min_pos_group);
