@@ -52,6 +52,7 @@ void HW3(int SOURCE, int n, int **edge, int *distance, int rank, int process_cou
     //MPI_Allgather will gather the local info into local groups and broadcast to every process
     MPI_Allgather(&local_min_val, 1, MPI_INT, local_min_val_group, 1, MPI_INT, MPI_COMM_WORLD);
     MPI_Allgather(&local_min_pos, 1, MPI_INT, local_min_pos_group, 1, MPI_INT, MPI_COMM_WORLD);
+
     //Get the global min val and position
     for (i = 0; i < process_count; i++) {
       if (local_min_val_group[i] < global_min_val) {
@@ -59,7 +60,7 @@ void HW3(int SOURCE, int n, int **edge, int *distance, int rank, int process_cou
         global_min_pos = local_min_pos_group[i];
       }
     }
-    //Debug info, may be deleted in the final submission
+    //Debug info, show global min value and position every 10 loops
     if (rank == 0 && count % 10 == 0) {
       for (i = 0; i < process_count; i++) {
         printf("%d ", local_min_val_group[i]);
@@ -74,13 +75,8 @@ void HW3(int SOURCE, int n, int **edge, int *distance, int rank, int process_cou
         distance[i] = min(distance[i], global_min_val + edge[global_min_pos][i]);
       }
     }
-    //We do not need to gather the info for distance array since each process handles an independent part, will gather the results after the while loop
-    //MPI_Barrier(MPI_COMM_WORLD); //Not sure MPI_Barrier is needed, but in my test case, it is not needed
   } /*** End of while ***/
 
-  // The send and receive buffer to be the same works on my end, or if you have objections we may follow the answer 
-  // listed in https://stackoverflow.com/a/34453564/22692032
-  
   // Gather the distance result on root process, i.e. process 0
   MPI_Gather(distance + istart, chunk, MPI_INT, distance, chunk, MPI_INT, 0, MPI_COMM_WORLD);
 
@@ -91,7 +87,7 @@ void HW3(int SOURCE, int n, int **edge, int *distance, int rank, int process_cou
     }
     printf("\n");
   }
-  
+
   free(found);
   free(local_min_val_group);
   free(local_min_pos_group);
@@ -113,16 +109,14 @@ int main(int argc, char **argv)
     edge[i] = (int *)calloc(n, sizeof(int));
   }
 
-  //TODO: Generate edge[n][n] values
-  //      Simply using random function does not work 
-  //      since it may violate triangle inequality
-  //Simple choice : Suppose all nodes are distributed in a straight line
+  // Generate edge values: Suppose all nodes are distributed in a straight line
   for (int i = 0; i < n; i++) {
     for (int j = i + 1; j < n; j++) {
       edge[i][j] = edge[j][i] = j - i;
     }
   }
-  //SOURCE = 0
+
+  // Assume Node 0 is the source node
   HW3(0, n, edge, distance, rank, process_count);
   free(distance);
   free(edge);
