@@ -17,14 +17,11 @@
 
 ## Instructions
 ### Compile
-To change the MPI wrapper to something other than `mpicc` (such as `mpich`), edit line 1 of the Makefile.
-```
-make
-```
+mpicc -o main main.c -lm
 
 ### Run
 ```
-./run.sh
+mpirun -np 2 main
 ```
 If you get an error saying "permission denied", run
 ```
