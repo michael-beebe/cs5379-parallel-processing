@@ -1,6 +1,6 @@
 # Project 2 - Group 5
 ## Team Members
-| Group Member                      | R# |
+| Group Member              |    R#     |
 |---------------------------|-----------|
 | Michael Beebe             | R11772231 |
 | Diego Salas Noain         | R11794236 |
