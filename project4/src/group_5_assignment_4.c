@@ -16,13 +16,14 @@
 
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
 #include <string.h>
 #include "mpi.h"
 
-#define INFTY 11111
+#define INTINFINITY 12345678
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 
 int W_rank;				//MPI world rank
@@ -30,14 +31,14 @@ int no_P_worldCome;		//# of P in world Comm
 MPI_Comm row_group, column_group; //row/ column communication
 int row_rank;		    //row group ranking
 int col_rank;			// Processor Rank in a Column
-int V = 16;				// # of elements for row or column
-int **W0, **W;          //input/output matrices (given be the professor)
+int n = 16;				// # of rows and columns
+int **D0, **D;          //input/output matrices (given be the professor)
 int chunk;
 
 /***************************************************************************/
 void shortestPath();
-void print_subMatrix(int chunk, int **W00);
-int generateRandomElements(int chunk);
+void print_subMatrix(int chunk, int **D00);
+void generateRandomElements(int chunk, bool diagonal);
 
 /***************************************************************************/
 int main(int argc, char **argv )
@@ -48,10 +49,9 @@ int main(int argc, char **argv )
     MPI_Comm_rank(MPI_COMM_WORLD, &W_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &no_P_worldCome);
 
-
     //The following loop finds the color of the row grouping based on W_Rank
     int tempRank=W_rank, color;
-    for(i=0;i<(int)sqrt(no_P_worldCome);i++)
+    for(i = 0;i < (int)sqrt(no_P_worldCome); i++)
     {
         if(tempRank<(int)sqrt(no_P_worldCome))
         {
@@ -71,10 +71,10 @@ int main(int argc, char **argv )
     MPI_Comm_rank(column_group, &col_rank);
 
     //calculate chunck
-    chunk = ((V)/(no_P_worldCome/(int)sqrt(no_P_worldCome)));
+    chunk = n/(int)sqrt(no_P_worldCome);
 
-    //fill W0 with random numbers
-    generateRandomElements(chunk);
+    //fill D0 with random numbers
+    generateRandomElements(chunk, row_rank == col_rank);
 
     //call the shortest path function
     shortestPath();
@@ -91,7 +91,7 @@ void shortestPath()
     col_no_K = malloc(chunk*sizeof(int));
 
     k=0;
-    while (k<V)
+    while (k<n)
     {
         //get the rank which handle the Kth row and column
         row_handeler = k/chunk;
@@ -100,7 +100,7 @@ void shortestPath()
         //update Kth row if this row assigned to you
         if (row_rank == row_handeler)
         {
-            memcpy ( &row_no_K, &W0[k%chunk], sizeof(chunk) );
+            memcpy ( &row_no_K, &D0[k%chunk], sizeof(chunk) );
         }
 
         //update Kth column if this row assigned to you
@@ -108,7 +108,7 @@ void shortestPath()
         {
             for (i=0; i<chunk; i++)
             {
-                col_no_K[i] = W0[i][k%chunk];
+                col_no_K[i] = D0[i][k%chunk];
             }
         }
 
@@ -120,8 +120,8 @@ void shortestPath()
         {
             for (j=0; j<chunk; j++)
             {
-                W[i][j]= MIN(W0[i][j],(row_no_K[i] + col_no_K[j]));
-                W0[i][j]=W[i][j];
+                D[i][j]= MIN(D0[i][j],(row_no_K[i] + col_no_K[j]));
+                D0[i][j]=D[i][j];
             }
         }
 
@@ -130,51 +130,51 @@ void shortestPath()
 
 
     //print the sub matrix
-    print_subMatrix(chunk, W);
-    free(W);
-    free(W0);
+    print_subMatrix(chunk, D);
+    free(D);
+    free(D0);
 }
 
 /***************************************************************************/
 //this function generates random elements and 0 for the diagonal
-int generateRandomElements(int chunk){
+void generateRandomElements(int chunk, bool diagonal){
     int i,j;
-    W0= malloc(chunk * sizeof(int *));
-    W =malloc(chunk * sizeof(int *));
+    D0 = malloc(chunk * sizeof(int *));
+    D = malloc(chunk * sizeof(int *));
     for (i = 0; i < chunk; i++){
-        W0[i] =  malloc(chunk * sizeof(int));
-        W[i] =  malloc(chunk * sizeof(int));
+        D0[i] =  malloc(chunk * sizeof(int));
+        D[i] =  malloc(chunk * sizeof(int));
     }
     srand((unsigned int) (time(NULL) + W_rank));
     for(i = 0; i < chunk; i++)
     {
         for(j = i; j < chunk; j++)
         {
-            if(i == j){
-                W0[i][j] = 0;
+            if(diagonal && i == j){
+                D0[i][j] = 0;
             }
             else
             {
+                // generate numbers between 1 to 10, if it is 10 set to be INFINITY
                 int r = (rand() % (10))+1;
-                int value = (r ==10 )? INFTY: r;
-                W0[i][j] = value;
-                W0[j][i] = value;
+                int value = (r ==10 )? INTINFINITY: r;
+                D0[i][j] = value;
+                D0[j][i] = value;
             }
         }
     }
-    print_subMatrix(chunk, W0);
-    //return W0;
+    print_subMatrix(chunk, D0);
 }
 
 /***************************************************************************/
 //this function print the sub matrix
-void print_subMatrix(int chunk, int **W00)
+void print_subMatrix(int chunk, int **D)
 {
     int i, j;
     printf("\n");
-    for(i=0;i<chunk;i++) {
+    for(i = 0; i < chunk; i++) {
         for (j = 0; j < chunk; j++) {
-            printf("%d \t", W00[i][j]);
+            printf("%d \t", D[i][j]);
         }
         printf("\n");
     }
