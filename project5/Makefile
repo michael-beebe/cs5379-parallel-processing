@@ -21,20 +21,20 @@ all: $(OUT)
 # Create build and bin directories
 $(BUILDDIR):
 	mkdir -p $(BUILDDIR)
-
+	
 $(BINDIR):
 	mkdir -p $(BINDIR)
-
+	
 # Linking
 $(OUT): $(OBJS) | $(BINDIR)
 	$(CC) $(CFLAGS) -o $(OUT) $(OBJS)
-
+	
 # Compiling and generating dependencies
 -include $(DEPS)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c | $(BUILDDIR)
 	$(CC) $(CFLAGS) -MMD -c $< -o $@
-
+	
 # Clean target
 .PHONY: clean
 clean:
