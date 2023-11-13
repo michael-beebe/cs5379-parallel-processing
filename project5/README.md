@@ -65,4 +65,12 @@ The provided code is designed for parallel processing using MPI (Message Passing
 - The `force_calc` function performs the core computation, leveraging parallel processing to calculate forces. Each process handles a subset of the data, contributing to the overall computation.
 - The program demonstrates efficient parallel computation by dividing the workload and using MPI functions for data distribution and result aggregation.
 
-This code is a typical example of parallel computing applications where a large problem (force calculation in a particle system) is broken down into smaller parts, each handled by different processors in a distributed system.
+### Achieving Load Balancing
+Load balancing achieved by the following equation in order to distribute the rows equally between the processes:
+- Part 1: 
+  - `Row location = (current iteration * (num_processes * 2)) + myRank`
+- Part2:
+  - `Row location = ((current iteration+1) * (#processes * 2) -1 myRank`
+
+These equations will distribute the rows as the following (if we assume P=4 and N=32), please note the data in the table is the row number:
+ ![image](https://github.com/michael-beebe/cs5379-parallel-processing/assets/113784916/218e733d-2c36-4f31-8a28-39d96f9f0691)
