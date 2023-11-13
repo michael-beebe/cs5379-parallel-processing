@@ -60,11 +60,6 @@ The provided code is designed for parallel processing using MPI (Message Passing
 - **Aggregation of Results**: Uses `MPI_Reduce` to gather computed forces from all processes to the master process.
 - **Result Printing**: The master process prints the final aggregated force values.
 
-### Overall Workflow and Parallelism
-- The main function sets up the MPI environment and distributes particle data across all processes.
-- The `force_calc` function performs the core computation, leveraging parallel processing to calculate forces. Each process handles a subset of the data, contributing to the overall computation.
-- The program demonstrates efficient parallel computation by dividing the workload and using MPI functions for data distribution and result aggregation.
-
 ### Achieving Load Balancing
 Load balancing achieved by the following equation in order to distribute the rows equally between the processes:
 - Part 1: 
@@ -74,3 +69,8 @@ Load balancing achieved by the following equation in order to distribute the row
 
 These equations will distribute the rows as the following (if we assume P=4 and N=32), please note the data in the table is the row number:
  ![image](https://github.com/michael-beebe/cs5379-parallel-processing/assets/113784916/218e733d-2c36-4f31-8a28-39d96f9f0691)
+
+### Overall Workflow and Parallelism
+- The main function sets up the MPI environment and distributes particle data across all processes.
+- The `force_calc` function performs the core computation, leveraging parallel processing to calculate forces. Each process handles a subset of the data, contributing to the overall computation.
+- The program demonstrates efficient parallel computation by dividing the workload and using MPI functions for data distribution and result aggregation.
