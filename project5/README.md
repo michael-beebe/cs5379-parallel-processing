@@ -40,3 +40,29 @@ make clean
 ```
 
 ## Code Breakdown
+
+The provided code is designed for parallel processing using MPI (Message Passing Interface) to calculate forces in a particle system. Here's a breakdown of its main components and functionality:
+
+### Main Function (`main`)
+- **MPI Initialization**: Initializes the MPI environment, necessary for any MPI program.
+- **Process Information Retrieval**: Retrieves the total number of processes (`P`) and the rank of the current process (`myRank`).
+- **Particle Initialization**: Allocates memory for and initializes an array of particles (`particles`) with unique values, done only by the process with rank 0.
+- **Broadcasting Particles**: The master process (rank 0) broadcasts the initialized particle array to all other processes in the MPI world.
+- **Barrier Synchronization**: Ensures all processes have received the particle data before proceeding.
+- **Force Calculation Call**: Calls the `force_calc` function to compute forces on each particle.
+- **MPI Finalization**: Cleans up the MPI environment at the end of the program.
+
+### Force Calculation Function (`force_calc`)
+- **Initial Setup**: Allocates a buffer for force values and initializes force array `f` with zeros.
+- **Iteration Logic**: Uses a nested loop structure to iterate over particle pairs. The iteration is divided into parts based on the process rank and the number of processes (`P`).
+  - **Determining Row Location**: Calculates the row location for force calculation based on the current process rank and iteration.
+  - **Force Calculation**: Computes the force exerted on each particle by other particles. The calculation considers the difference in positions (`diff`) and updates forces for each pair.
+- **Aggregation of Results**: Uses `MPI_Reduce` to gather computed forces from all processes to the master process.
+- **Result Printing**: The master process prints the final aggregated force values.
+
+### Overall Workflow and Parallelism
+- The main function sets up the MPI environment and distributes particle data across all processes.
+- The `force_calc` function performs the core computation, leveraging parallel processing to calculate forces. Each process handles a subset of the data, contributing to the overall computation.
+- The program demonstrates efficient parallel computation by dividing the workload and using MPI functions for data distribution and result aggregation.
+
+This code is a typical example of parallel computing applications where a large problem (force calculation in a particle system) is broken down into smaller parts, each handled by different processors in a distributed system.
