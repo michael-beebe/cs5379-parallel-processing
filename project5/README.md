@@ -16,8 +16,13 @@
 - Bash
 
 ## Instructions
+### Load Proper Modules (if on HPCC's Nocona partition)
+```
+ml load gcc/10.1.0 openmpi/4.1.4
+```
+
 ### Compile
-To change the MPI wrapper to something other than `mpicc` (such as `mpich`), edit line 1 of the Makefile.
+To change the MPI wrapper to something other than `mpicc` (such as `mpich`), edit line 1 of the Makefile. If you are using OpenMPI on the HPCC's Nocona partition, no changes to the Makefile are needed.
 ```
 make
 ```
