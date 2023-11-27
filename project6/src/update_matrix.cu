@@ -5,20 +5,19 @@ __global__ void update_matrix(int *D, int n) {
   int i = threadIdx.y + blockDim.y * blockIdx.y; // Row index
   int j = threadIdx.x + blockDim.x * blockIdx.z; // Column index
 
-  // Check bounds
-  if (i < n && j < n && k < n) {
-    // Copy the k-th row and column to shared memory
-    __shared__ int hbuf[MATRIX_SIZE];
-    __shared__ int vbuf[MATRIX_SIZE];
+  if (i < n && j < n) {
+    __shared__ int kRow[MATRIX_SIZE];
+    __shared__ int kCol[MATRIX_SIZE];
 
-    if (threadIdx.x == 0) vbuf[i] = D[i * n + k];
-    if (threadIdx.y == 0) hbuf[j] = D[k * n + j];
+    // Load the k-th row and column into shared memory
+    if (threadIdx.x == 0 && i < n) kCol[i] = D[i * n + k];
+    if (threadIdx.y == 0 && j < n) kRow[j] = D[k * n + j];
 
-    __syncthreads(); // Ensure all threads have written to shared memory
+    __syncthreads(); // Ensure loading is complete
 
-    // Update the matrix D
+    // Update the matrix
     if (i != j) {
-      D[i * n + j] = min(D[i * n + j], vbuf[i] + hbuf[j]);
+      atomicMin(&D[i * n + j], kCol[i] + kRow[j]);
     }
   }
 }
@@ -30,17 +29,17 @@ void run_update_matrix(int *D, int n) {
   cudaMalloc((void**)&dev_D, n * n * sizeof(int));
   cudaMemcpy(dev_D, D, n * n * sizeof(int), cudaMemcpyHostToDevice);
 
-  // Calculate dimensions for blocks and threads
-  dim3 blocks(BLOCKS_PER_GRID, BLOCKS_PER_GRID, n); // Using 3D grid for phases and matrix rows/columns
-  dim3 threadsPerBlock((THREADS_PER_BLOCK / BLOCKS_PER_GRID), (THREADS_PER_BLOCK / BLOCKS_PER_GRID));
+  // Define grid and block sizes
+  dim3 blocks(n, 1, 1); // One block per phase
+  dim3 threadsPerBlock(THREADS_PER_BLOCK / n, n);
 
-  // Launch kernel
-  update_matrix<<<blocks, threadsPerBlock>>>(dev_D, n);
+  // Launch the kernel
+  for (int k = 0; k < n; ++k) {
+    update_matrix<<<blocks, threadsPerBlock>>>(dev_D, n);
+  }
 
-  // Synchronize device
+  // Synchronize and copy back results
   cudaDeviceSynchronize();
-
-  // Copy result back to host
   cudaMemcpy(D, dev_D, n * n * sizeof(int), cudaMemcpyDeviceToHost);
 
   // Free device memory

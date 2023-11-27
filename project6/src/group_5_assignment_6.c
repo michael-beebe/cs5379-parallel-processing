@@ -30,13 +30,14 @@ int main() {
   // Initialize D with random data
   initialize_matrix(D, n);
 
-  printf("Original Matrix:\n");
+  printf("\nOriginal Matrix:\n");
   print_matrix(D, n);
 
   run_update_matrix(D, n);
 
-  printf("Matrix after Floyd-Warshall:\n");
+  printf("\nMatrix after Floyd-Warshall:\n");
   print_matrix(D, n);
+  printf("\n");
 
   free(D);
   return 0;
