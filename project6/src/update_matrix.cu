@@ -1,13 +1,15 @@
-__global__ void update_matrix() {
+#include "update_matrix.h"
+
+__global__ void update_matrix(int *D, int n) {
   int k = blockIdx.x; // Current phase based on block index
   int i = threadIdx.y + blockDim.y * blockIdx.y; // Row index
-  int j = threadIdx.x + blockDim.x * blockIdx.x; // Column index
+  int j = threadIdx.x + blockDim.x * blockIdx.z; // Column index
 
   // Check bounds
-  if (i < n && j < n) {
+  if (i < n && j < n && k < n) {
     // Copy the k-th row and column to shared memory
-    __shared__ int hbuf[MAX_N];
-    __shared__ int vbuf[MAX_N];
+    __shared__ int hbuf[MATRIX_SIZE];
+    __shared__ int vbuf[MATRIX_SIZE];
 
     if (threadIdx.x == 0) vbuf[i] = D[i * n + k];
     if (threadIdx.y == 0) hbuf[j] = D[k * n + j];
@@ -21,8 +23,6 @@ __global__ void update_matrix() {
   }
 }
 
-
-
 void run_update_matrix(int *D, int n) {
   int *dev_D;
 
@@ -30,35 +30,19 @@ void run_update_matrix(int *D, int n) {
   cudaMalloc((void**)&dev_D, n * n * sizeof(int));
   cudaMemcpy(dev_D, D, n * n * sizeof(int), cudaMemcpyHostToDevice);
 
-  // Launch kernel with 32 blocks and 256 threads per block
-  int numBlocks = 32;
-  dim3 blocks(numBlocks, numBlocks);
-  dim3 threadsPerBlock(THREADS_PER_BLOCK / numBlocks, THREADS_PER_BLOCK / numBlocks);
-  updateMatrix<<<blocks, threadsPerBlock>>>(dev_D, n);
+  // Calculate dimensions for blocks and threads
+  dim3 blocks(BLOCKS_PER_GRID, BLOCKS_PER_GRID, n); // Using 3D grid for phases and matrix rows/columns
+  dim3 threadsPerBlock((THREADS_PER_BLOCK / BLOCKS_PER_GRID), (THREADS_PER_BLOCK / BLOCKS_PER_GRID));
+
+  // Launch kernel
+  update_matrix<<<blocks, threadsPerBlock>>>(dev_D, n);
+
+  // Synchronize device
+  cudaDeviceSynchronize();
 
   // Copy result back to host
   cudaMemcpy(D, dev_D, n * n * sizeof(int), cudaMemcpyDeviceToHost);
+
+  // Free device memory
   cudaFree(dev_D);
 }
-
-
-
-
-
-
-// void run_update_matrix(int *D, int n) {
-//   int *dev_D;
-  
-//   // Allocate memory on the device
-//   cudaMalloc((void**)&dev_D, n * n * sizeof(int));
-//   cudaMemcpy(dev_D, D, n * n * sizeof(int), cudaMemcpyHostToDevice);
-
-//   // Launch kernel
-//   dim3 blocks(n, n / THREADS_PER_BLOCK); 
-//   dim3 threadsPerBlock(THREADS_PER_BLOCK, THREADS_PER_BLOCK);
-//   update_matrix<<<blocks, threadsPerBlock>>>(dev_D, n);
-
-//   // Copy result back to host
-//   cudaMemcpy(D, dev_D, n * n * sizeof(int), cudaMemcpyDeviceToHost);
-//   cudaFree(dev_D);
-// }

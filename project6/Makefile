@@ -33,7 +33,7 @@ $(BINDIR):
 
 # Linking
 $(OUT): $(COBJS) $(CU_OBJS) | $(BINDIR)
-	$(NVCC) $(NVCCFLAGS) -o $(OUT) $(COBJS) $(CU_OBJS)
+	$(NVCC) $(NVCCFLAGS) -o $(OUT) $(COBJS) $(CU_OBJS) -lcudart
 
 # Compiling C sources
 -include $(DEPS)
